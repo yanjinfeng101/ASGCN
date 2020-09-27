@@ -37,10 +37,10 @@ class ASGCN(nn.Module):
         self.text_lstm = DynamicLSTM(opt.embed_dim, opt.hidden_dim, num_layers=1, batch_first=True, bidirectional=True)
         self.gc1 = GraphConvolution(2*opt.hidden_dim, 2*opt.hidden_dim)
         self.gc2 = GraphConvolution(2*opt.hidden_dim, 2*opt.hidden_dim)
-        self.fc = nn.Linear(2*opt.hidden_dim, opt.polarities_dim)
+        self.fc = nn.Linear(2*opt.hidden_dim, opt.polarities_dim)#设置全连接层，输入输出都是二维张量，输出的二维张量也代表着该连接层的神经元个数，
         self.text_embed_dropout = nn.Dropout(0.3)
 
-    def position_weight(self, x, aspect_double_idx, text_len, aspect_len):
+    def position_weight(self, x, aspect_double_idx, text_len, aspect_len):#位置编码，用于减少依存句法分析过程中产生的噪声和偏差，增强目标周围词的重要性
         batch_size = x.shape[0]
         seq_len = x.shape[1]
         aspect_double_idx = aspect_double_idx.cpu().numpy()
@@ -60,7 +60,7 @@ class ASGCN(nn.Module):
         weight = torch.tensor(weight).unsqueeze(2).to(self.opt.device)
         return weight*x
 
-    def mask(self, x, aspect_double_idx):
+    def mask(self, x, aspect_double_idx):#非目标掩码，获取目标特征
         batch_size, seq_len = x.shape[0], x.shape[1]
         aspect_double_idx = aspect_double_idx.cpu().numpy()
         mask = [[] for i in range(batch_size)]
@@ -83,7 +83,7 @@ class ASGCN(nn.Module):
         text = self.embed(text_indices)
         text = self.text_embed_dropout(text)
         text_out, (_, _) = self.text_lstm(text, text_len)
-        x = F.relu(self.gc1(self.position_weight(text_out, aspect_double_idx, text_len, aspect_len), adj))
+        x = F.relu(self.gc1(self.position_weight(text_out, aspect_double_idx, text_len, aspect_len), adj))#先进行位置编码，再进入连续的GCN层。
         x = F.relu(self.gc2(self.position_weight(x, aspect_double_idx, text_len, aspect_len), adj))
         x = self.mask(x, aspect_double_idx)
         alpha_mat = torch.matmul(x, text_out.transpose(1, 2))
