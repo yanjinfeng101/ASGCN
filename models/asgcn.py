@@ -89,5 +89,5 @@ class ASGCN(nn.Module):
         alpha_mat = torch.matmul(x, text_out.transpose(1, 2))
         alpha = F.softmax(alpha_mat.sum(1, keepdim=True), dim=2)
         x = torch.matmul(alpha, text_out).squeeze(1) # batch_size x 2*hidden_dim
-        output = self.fc(x)
+        output = self.fc(x)#self.fc = nn.Linear(2*opt.hidden_dim, opt.polarities_dim)
         return output
