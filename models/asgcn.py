@@ -86,8 +86,8 @@ class ASGCN(nn.Module):
         x = F.relu(self.gc1(self.position_weight(text_out, aspect_double_idx, text_len, aspect_len), adj))#先进行位置编码，再进入连续的GCN层。
         x = F.relu(self.gc2(self.position_weight(x, aspect_double_idx, text_len, aspect_len), adj))
         x = self.mask(x, aspect_double_idx)
-        alpha_mat = torch.matmul(x, text_out.transpose(1, 2))
-        alpha = F.softmax(alpha_mat.sum(1, keepdim=True), dim=2)
+        alpha_mat = torch.matmul(x, text_out.transpose(1, 2))#融入aspect信息作为query，可以理解为当前aspect与position t的相似度权重。
+        alpha = F.softmax(alpha_mat.sum(1, keepdim=True), dim=2)#经过softmax函数得到概率值
         x = torch.matmul(alpha, text_out).squeeze(1) # batch_size x 2*hidden_dim
         output = self.fc(x)#self.fc = nn.Linear(2*opt.hidden_dim, opt.polarities_dim)
         return output
