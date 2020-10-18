@@ -49,6 +49,8 @@ class ASGCN(nn.Module):
         weight = [[] for i in range(batch_size)]
         for i in range(batch_size):
             context_len = text_len[i] - aspect_len[i]
+           #aspect_double_idx = torch.cat([left_len.unsqueeze(1), (left_len+aspect_len-1).unsqueeze(1)], dim=1)
+           #aspect_double_idx[i,0]是left_len，aspect_double_idx[i,1]是left_len+aspect_len-1
             for j in range(aspect_double_idx[i,0]):
                 weight[i].append(1-(aspect_double_idx[i,0]-j)/context_len)
             for j in range(aspect_double_idx[i,0], aspect_double_idx[i,1]+1):
